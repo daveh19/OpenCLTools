@@ -220,6 +220,8 @@ int main(int argc, char **argv)
 	const char *program_source[] = {
 		"__kernel void simple_demo(__global int *src, __global int *dst, int factor)\n",
 		"{\n",
+        " float usemem[100000000];\n",
+        " usemem[0] = 1;\n",
 		"	int i = get_global_id(0);\n",
 		"	dst[i] = src[i] * factor;\n",
 		"}\n"
@@ -261,6 +263,9 @@ int main(int argc, char **argv)
 
     CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[j], CL_KERNEL_PRIVATE_MEM_SIZE, sizeof((buf_ulong)), &buf_ulong, NULL) );
     printf(" CL_KERNEL_PRIVATE_MEM_SIZE: %ld \n", (long int)buf_ulong);
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[j], CL_KERNEL_LOCAL_MEM_SIZE, sizeof((buf_ulong)), &buf_ulong, NULL) );
+    printf(" CL_KERNEL_LOCAL_MEM_SIZE: %ld \n", (long int)buf_ulong);
+        
     // End kernel-device queries
         
         
