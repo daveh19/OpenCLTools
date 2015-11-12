@@ -67,9 +67,14 @@ void pfn_notify(const char *errinfo, const void *private_info, size_t cb, void *
 
 int main(int argc, char **argv)
 {
-	cl_platform_id platforms[100];
+    cl_platform_id *platforms = NULL;
 	cl_uint platforms_n = 0;
-	CL_CHECK(clGetPlatformIDs(100, platforms, &platforms_n));
+    // find out how many platforms available
+    CL_CHECK(clGetPlatformIDs(0, NULL, &platforms_n));
+    //printf("DEBUG: platforms_n = %d\n", platforms_n);
+    platforms = malloc(platforms_n * sizeof(cl_platform_id));
+    // get the platform IDs
+	CL_CHECK(clGetPlatformIDs(platforms_n, platforms, &platforms_n));
 
 	printf("=== %d OpenCL platform(s) found: ===\n", platforms_n);
 	for (int i=0; i<platforms_n; i++)
