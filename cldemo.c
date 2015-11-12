@@ -41,7 +41,7 @@
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_GPU)
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_DEFAULT)
 
-#define TU_BERLIN_WORKAROUND
+//#define TU_BERLIN_WORKAROUND
 
 const int attributeCount = 5;
 const char* attributeNames[5] = { "Name", "Vendor", "Version", "Profile", "Extensions" };
@@ -148,9 +148,9 @@ int main(int argc, char **argv)
     CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_TO_QUERY, devices_n, devices, NULL));
 	
     // QUERY INDIVIDUAL DEVICES ON EACH PLATFORM
-        printf("=== %d OpenCL device(s) found on #%d platform:\n", devices_n, i); //platforms_n);
+    printf("=== %d OpenCL device(s) found on #%d platform:\n", devices_n, i); //platforms_n);
     //printf("devices_n = %d \n", devices_n);
-	for (int i=0; i<devices_n; i++)
+	for (int j=0; j<devices_n; j++)
 	{
 		char buffer[10240];
 		size_t buf_sizet;
@@ -163,47 +163,47 @@ int main(int argc, char **argv)
         cl_platform_id buf_platform;
         
         
-        printf("  -- %d --\n", i);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_NAME, sizeof(buffer), buffer, NULL));
+        printf("  -- %d --\n", j);
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_NAME, sizeof(buffer), buffer, NULL));
         printf("  DEVICE_NAME = %s\n", buffer);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_VENDOR, sizeof(buffer), buffer, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_VENDOR, sizeof(buffer), buffer, NULL));
         printf("  DEVICE_VENDOR = %s\n", buffer);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, sizeof(buffer), buffer, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_VERSION, sizeof(buffer), buffer, NULL));
         printf("  DEVICE_VERSION = %s\n", buffer);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DRIVER_VERSION, sizeof(buffer), buffer, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DRIVER_VERSION, sizeof(buffer), buffer, NULL));
         printf("  DRIVER_VERSION = %s\n", buffer);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_TYPE, sizeof(buf_type), &buf_type, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_TYPE, sizeof(buf_type), &buf_type, NULL));
         printf("  DEVICE_TYPE = %d\n", (int)buf_type);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_PLATFORM, sizeof(buf_platform), &buf_platform, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_PLATFORM, sizeof(buf_platform), &buf_platform, NULL));
         printf("  DEVICE_PLATFORM = %ld\n", (unsigned long int)buf_platform);
      
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_CLOCK_FREQUENCY = %u\n", (unsigned int)buf_uint);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CONSTANT_ARGS, sizeof(buf_uint), &buf_uint, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_CONSTANT_ARGS, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_CONSTANT_ARGS = %u\n", (unsigned int)buf_uint);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
         printf("  DEVICE_GLOBAL_MEM_SIZE = %llu\n", (unsigned long long)buf_ulong);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
         printf("  DEVICE_MAX_MEM_ALLOC_SIZE = %llu\n", (unsigned long long)buf_ulong);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(buf_uint), &buf_uint, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_COMPUTE_UNITS = %u\n", (unsigned int)buf_uint);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &buf_sizet, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &buf_sizet, NULL));
         printf("  DEVICE_MAX_WORK_GROUP_SIZE = %u\n", (unsigned int)buf_sizet);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(buf_uint), &buf_uint, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_WORK_ITEM_DIMENSIONS = %u\n", (unsigned int)buf_uint);
         buf_sizet_array = malloc(buf_uint * sizeof(size_t));
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, buf_uint * sizeof(size_t), buf_sizet_array, NULL));
-        for (int j = 0; j<buf_uint; j++)
-            printf("  DEVICE_MAX_WORK_ITEM_SIZES[%d] = %u\n", j, (unsigned int)buf_sizet_array[j]);
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_ITEM_SIZES, buf_uint * sizeof(size_t), buf_sizet_array, NULL));
+        for (int k = 0; k<buf_uint; k++)
+            printf("  DEVICE_MAX_WORK_ITEM_SIZES[%d] = %u\n", k, (unsigned int)buf_sizet_array[k]);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_AVAILABLE, sizeof(buf_bool), &buf_bool, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_AVAILABLE, sizeof(buf_bool), &buf_bool, NULL));
         printf("  DEVICE_AVAILABLE = %d\n", (int)buf_bool);
         
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, NULL));
+        CL_CHECK(clGetDeviceInfo(devices[j], CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, NULL));
         printf("  DEVICE_EXTENSIONS = %s\n", buffer);
 
 	//}
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
 
     printf("Beginning creation of OpenCL context on individual device for testing of computation.\n");
 	cl_context context;
-	context = CL_CHECK_ERR(clCreateContext(NULL, 1, &devices[i], &pfn_notify, NULL, &_err));
+	context = CL_CHECK_ERR(clCreateContext(NULL, 1, &devices[j], &pfn_notify, NULL, &_err));
 
 	const char *program_source[] = {
 		"__kernel void simple_demo(__global int *src, __global int *dst, int factor)\n",
@@ -227,13 +227,13 @@ int main(int argc, char **argv)
 
 	cl_program program;
 	program = CL_CHECK_ERR(clCreateProgramWithSource(context, sizeof(program_source)/sizeof(*program_source), program_source, NULL, &_err));
-	if (clBuildProgram(program, 1, &devices[i], "", NULL, NULL) != CL_SUCCESS) {
+	if (clBuildProgram(program, 1, &devices[j], "", NULL, NULL) != CL_SUCCESS) {
 		char buffer[10240];
-		clGetProgramBuildInfo(program, devices[i], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, NULL);
+		clGetProgramBuildInfo(program, devices[j], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, NULL);
 		fprintf(stderr, "CL Compilation failed:\n%s", buffer);
 		abort();
 	}
-	//CL_CHECK(clUnloadCompiler());
+	//CL_CHECK(clUnloadCompiler()); // derecated
 
 	cl_mem input_buffer;
 	input_buffer = CL_CHECK_ERR(clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(int)*NUM_DATA, NULL, &_err));
@@ -252,23 +252,23 @@ int main(int argc, char **argv)
         
     // The kernel is now compiled, so we can do some more queries to find out how it fits with the device hardware
     printf("Kernel-device combo specific parameters:\n");
-    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof((buf_sizet)), &buf_sizet, NULL));
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[j], CL_KERNEL_WORK_GROUP_SIZE, sizeof((buf_sizet)), &buf_sizet, NULL));
     printf(" CL_KERNEL_WORK_GROUP_SIZE: %d \n", (int)buf_sizet);
     
     printf(" Later versions of OpenCL:\n");
-    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof((buf_sizet)), &buf_sizet, NULL) );
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[j], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof((buf_sizet)), &buf_sizet, NULL) );
     printf(" CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE: %d \n", (int)buf_sizet);
 
-    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PRIVATE_MEM_SIZE, sizeof((buf_ulong)), &buf_ulong, NULL) );
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[j], CL_KERNEL_PRIVATE_MEM_SIZE, sizeof((buf_ulong)), &buf_ulong, NULL) );
     printf(" CL_KERNEL_PRIVATE_MEM_SIZE: %ld \n", (long int)buf_ulong);
     // End kernel-device queries
         
         
 	cl_command_queue queue;
-	queue = CL_CHECK_ERR(clCreateCommandQueue(context, devices[i], 0, &_err));
+	queue = CL_CHECK_ERR(clCreateCommandQueue(context, devices[j], 0, &_err));
 
-	for (int i=0; i<NUM_DATA; i++) {
-		CL_CHECK(clEnqueueWriteBuffer(queue, input_buffer, CL_TRUE, i*sizeof(int), sizeof(int), &i, 0, NULL, NULL));
+	for (int k=0; k<NUM_DATA; k++) {
+		CL_CHECK(clEnqueueWriteBuffer(queue, input_buffer, CL_TRUE, k*sizeof(int), sizeof(int), &k, 0, NULL, NULL));
 	}
 
 	cl_event kernel_completion;
@@ -278,9 +278,9 @@ int main(int argc, char **argv)
 	CL_CHECK(clReleaseEvent(kernel_completion));
 
 	printf("\nKernel Result:");
-	for (int i=0; i<NUM_DATA; i++) {
+	for (int k=0; k<NUM_DATA; k++) {
 		int data;
-		CL_CHECK(clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, i*sizeof(int), sizeof(int), &data, 0, NULL, NULL));
+		CL_CHECK(clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, k*sizeof(int), sizeof(int), &data, 0, NULL, NULL));
 		printf(" %d", data);
 	}
 	printf("\n");
