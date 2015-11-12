@@ -41,6 +41,7 @@
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_GPU)
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_DEFAULT)
 
+//#define TU_BERLIN_WORKAROUND
 
 #define NUM_DATA 100
 
@@ -114,9 +115,11 @@ int main(int argc, char **argv)
 	if (platforms_n == 0)
 		return 1;
         
-    //Hack for TU-berlin setup
-    //if (i == 0)
-    //    continue;
+    //Hack for TU Berlin setup
+#ifdef TU_BERLIN_WORKAROUND
+    if (i == 0)
+        continue;
+#endif
         
     // FIND OUT HOW MANY DEVICES
 	cl_device_id *devices = NULL;
@@ -136,9 +139,16 @@ int main(int argc, char **argv)
 	for (int i=0; i<devices_n; i++)
 	{
 		char buffer[10240];
-		cl_uint buf_uint;
+		size_t buf_sizet;
+        size_t *buf_sizet_array = NULL;
+        
+        cl_uint buf_uint;
 		cl_ulong buf_ulong;
-        size_t buf_sizet;
+        cl_bool buf_bool;
+        cl_device_type buf_type;
+        cl_platform_id buf_platform;
+        
+        
         printf("  -- %d --\n", i);
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_NAME, sizeof(buffer), buffer, NULL));
         printf("  DEVICE_NAME = %s\n", buffer);
@@ -148,16 +158,44 @@ int main(int argc, char **argv)
         printf("  DEVICE_VERSION = %s\n", buffer);
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DRIVER_VERSION, sizeof(buffer), buffer, NULL));
         printf("  DRIVER_VERSION = %s\n", buffer);
+        
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_TYPE, sizeof(buf_type), &buf_type, NULL));
+        printf("  DEVICE_TYPE = %d\n", (int)buf_type);
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_PLATFORM, sizeof(buf_platform), &buf_platform, NULL));
+        printf("  DEVICE_PLATFORM = %d\n", (int)buf_platform);
+     
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
+        printf("  DEVICE_MAX_CLOCK_FREQUENCY = %u\n", (unsigned int)buf_uint);
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CONSTANT_ARGS, sizeof(buf_uint), &buf_uint, NULL));
+        printf("  DEVICE_MAX_CONSTANT_ARGS = %u\n", (unsigned int)buf_uint);
+        
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
+        printf("  DEVICE_GLOBAL_MEM_SIZE = %llu\n", (unsigned long long)buf_ulong);
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
+        printf("  DEVICE_MAX_MEM_ALLOC_SIZE = %llu\n", (unsigned long long)buf_ulong);
+        
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_COMPUTE_UNITS = %u\n", (unsigned int)buf_uint);
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &buf_sizet, NULL));
         printf("  DEVICE_MAX_WORK_GROUP_SIZE = %u\n", (unsigned int)buf_sizet);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
-        printf("  DEVICE_MAX_CLOCK_FREQUENCY = %u\n", (unsigned int)buf_uint);
-        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(buf_ulong), &buf_ulong, NULL));
-        printf("  DEVICE_GLOBAL_MEM_SIZE = %llu\n", (unsigned long long)buf_ulong);
+        
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(buf_uint), &buf_uint, NULL));
+        printf("  DEVICE_MAX_WORK_ITEM_DIMENSIONS = %u\n", (unsigned int)buf_uint);
+        buf_sizet_array = malloc(buf_uint * sizeof(size_t));
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, buf_uint * sizeof(size_t), buf_sizet_array, NULL));
+        for (int j = 0; j<buf_uint; j++)
+            printf("  DEVICE_MAX_WORK_ITEM_SIZES[%d] = %u\n", j, (unsigned int)buf_sizet_array[j]);
+        
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_AVAILABLE, sizeof(buf_bool), &buf_bool, NULL));
+        printf("  DEVICE_AVAILABLE = %d\n", (int)buf_bool);
+        
+        CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_EXTENSIONS, sizeof(buffer), buffer, NULL));
+        printf("  DEVICE_EXTENSIONS = %s\n", buffer);
+
 	//}
 
+        printf("DEBUG: finished querying device capabilities\n\n\n");
+        
 	if (devices_n == 0)
 		return 1;
 
