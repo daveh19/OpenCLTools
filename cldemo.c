@@ -194,13 +194,14 @@ int main(int argc, char **argv)
 
 	//}
 
-        printf("DEBUG: finished querying device capabilities\n\n\n");
+        printf("Finished querying individual device capabilities\n\n");
         
 	if (devices_n == 0)
 		return 1;
 
+    printf("Beginning creation of OpenCL context on individual device for testing of computation.\n");
 	cl_context context;
-	context = CL_CHECK_ERR(clCreateContext(NULL, 1, devices, &pfn_notify, NULL, &_err));
+	context = CL_CHECK_ERR(clCreateContext(NULL, 1, &devices[i], &pfn_notify, NULL, &_err));
 
 	const char *program_source[] = {
 		"__kernel void simple_demo(__global int *src, __global int *dst, int factor)\n",
@@ -212,9 +213,9 @@ int main(int argc, char **argv)
 
 	cl_program program;
 	program = CL_CHECK_ERR(clCreateProgramWithSource(context, sizeof(program_source)/sizeof(*program_source), program_source, NULL, &_err));
-	if (clBuildProgram(program, 1, devices, "", NULL, NULL) != CL_SUCCESS) {
+	if (clBuildProgram(program, 1, &devices[i], "", NULL, NULL) != CL_SUCCESS) {
 		char buffer[10240];
-		clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, NULL);
+		clGetProgramBuildInfo(program, devices[i], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, NULL);
 		fprintf(stderr, "CL Compilation failed:\n%s", buffer);
 		abort();
 	}
@@ -235,15 +236,15 @@ int main(int argc, char **argv)
 	CL_CHECK(clSetKernelArg(kernel, 2, sizeof(factor), &factor));
 
 //insert
-    size_t local;
+/*    size_t local;
     CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof((local)), &local, NULL));
     printf(" CL_KERNEL_WORK_GROUP_SIZE: %d \n", (int)local);
     CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof((local)), &local, NULL) );
-    printf(" CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE: %d \n", (int)local);
+    printf(" CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE: %d \n", (int)local);*/
 //end insert
         
 	cl_command_queue queue;
-	queue = CL_CHECK_ERR(clCreateCommandQueue(context, devices[0], 0, &_err));
+	queue = CL_CHECK_ERR(clCreateCommandQueue(context, devices[i], 0, &_err));
 
 	for (int i=0; i<NUM_DATA; i++) {
 		CL_CHECK(clEnqueueWriteBuffer(queue, input_buffer, CL_TRUE, i*sizeof(int), sizeof(int), &i, 0, NULL, NULL));
@@ -255,7 +256,7 @@ int main(int argc, char **argv)
 	CL_CHECK(clWaitForEvents(1, &kernel_completion));
 	CL_CHECK(clReleaseEvent(kernel_completion));
 
-	printf("Result:");
+	printf("Kernel Result:");
 	for (int i=0; i<NUM_DATA; i++) {
 		int data;
 		CL_CHECK(clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, i*sizeof(int), sizeof(int), &data, 0, NULL, NULL));
@@ -270,8 +271,12 @@ int main(int argc, char **argv)
 	CL_CHECK(clReleaseProgram(program));
 	CL_CHECK(clReleaseContext(context));
 
+    printf("End of device loop\n\n\n");
     } //end devices per platform loop
+    printf("End of platforms loop\n\n");
     } //end platforms loop
+    
+    printf("Successful completion of OpenCL testing program\n");
     
 	return 0;
 }
