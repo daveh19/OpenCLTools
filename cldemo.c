@@ -41,7 +41,16 @@
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_GPU)
 //#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_DEFAULT)
 
-//#define TU_BERLIN_WORKAROUND
+#define TU_BERLIN_WORKAROUND
+
+const int attributeCount = 5;
+const char* attributeNames[5] = { "Name", "Vendor", "Version", "Profile", "Extensions" };
+const cl_platform_info attributeTypes[5] = {
+    CL_PLATFORM_NAME,
+    CL_PLATFORM_VENDOR,
+    CL_PLATFORM_VERSION,
+    CL_PLATFORM_PROFILE,
+    CL_PLATFORM_EXTENSIONS };
 
 #define NUM_DATA 100
 
@@ -86,14 +95,14 @@ int main(int argc, char **argv)
 
     // QUERY INDIVIDUAL PLATFORM INFO
 	printf("=== %d OpenCL platform(s) found: ===\n", platforms_n);
-    const int attributeCount = 5;
+   /* const int attributeCount = 5;
     const char* attributeNames[attributeCount] = { "Name", "Vendor", "Version", "Profile", "Extensions" };
     const cl_platform_info attributeTypes[attributeCount] = {
         CL_PLATFORM_NAME,
         CL_PLATFORM_VENDOR,
         CL_PLATFORM_VERSION,
         CL_PLATFORM_PROFILE,
-        CL_PLATFORM_EXTENSIONS };
+        CL_PLATFORM_EXTENSIONS };*/
     char *info;
     size_t infoSize = 0;
 	for (int i=0; i<platforms_n; i++)
@@ -107,21 +116,26 @@ int main(int argc, char **argv)
             
             // get platform attribute value
             clGetPlatformInfo(platforms[i], attributeTypes[j], infoSize, info, NULL);
-            printf("  %d.%d %-11s = %s\n", i+1, j+1, attributeNames[j], info);
+            printf("  %d.%d %-11s = %s\n", i, j+1, attributeNames[j], info);
         } 
         printf("\n\n"); 
     //}
 
-	if (platforms_n == 0)
+    if (platforms_n == 0){
+        printf("No OpenCL platforms found, exiting\n");
 		return 1;
+    }
         
     //Hack for TU Berlin setup
 #ifdef TU_BERLIN_WORKAROUND
-    if (i == 0)
+    if (i == 0){
+        printf("Executing TU Berlin workaround, skipping device queries on first platform\n");
         continue;
+    }
 #endif
         
     // FIND OUT HOW MANY DEVICES
+    printf("Platform %d:\n", i);
 	cl_device_id *devices = NULL;
 	cl_uint devices_n = 0;
     printf("Querying device numbers,");
@@ -134,7 +148,7 @@ int main(int argc, char **argv)
     CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_TO_QUERY, devices_n, devices, NULL));
 	
     // QUERY INDIVIDUAL DEVICES ON EACH PLATFORM
-	printf("=== %d OpenCL device(s) found on %d platform:\n", devices_n, platforms_n);
+        printf("=== %d OpenCL device(s) found on #%d platform:\n", devices_n, i); //platforms_n);
     //printf("devices_n = %d \n", devices_n);
 	for (int i=0; i<devices_n; i++)
 	{
@@ -162,7 +176,7 @@ int main(int argc, char **argv)
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_TYPE, sizeof(buf_type), &buf_type, NULL));
         printf("  DEVICE_TYPE = %d\n", (int)buf_type);
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_PLATFORM, sizeof(buf_platform), &buf_platform, NULL));
-        printf("  DEVICE_PLATFORM = %d\n", (int)buf_platform);
+        printf("  DEVICE_PLATFORM = %ld\n", (unsigned long int)buf_platform);
      
         CL_CHECK(clGetDeviceInfo(devices[i], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(buf_uint), &buf_uint, NULL));
         printf("  DEVICE_MAX_CLOCK_FREQUENCY = %u\n", (unsigned int)buf_uint);
@@ -235,13 +249,20 @@ int main(int argc, char **argv)
 	CL_CHECK(clSetKernelArg(kernel, 1, sizeof(output_buffer), &output_buffer));
 	CL_CHECK(clSetKernelArg(kernel, 2, sizeof(factor), &factor));
 
-//insert
-/*    size_t local;
-    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof((local)), &local, NULL));
-    printf(" CL_KERNEL_WORK_GROUP_SIZE: %d \n", (int)local);
-    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof((local)), &local, NULL) );
-    printf(" CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE: %d \n", (int)local);*/
-//end insert
+        
+    // The kernel is now compiled, so we can do some more queries to find out how it fits with the device hardware
+    printf("Kernel-device combo specific parameters:\n");
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof((buf_sizet)), &buf_sizet, NULL));
+    printf(" CL_KERNEL_WORK_GROUP_SIZE: %d \n", (int)buf_sizet);
+    
+    printf(" Later versions of OpenCL:\n");
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof((buf_sizet)), &buf_sizet, NULL) );
+    printf(" CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE: %d \n", (int)buf_sizet);
+
+    CL_CHECK(clGetKernelWorkGroupInfo(kernel, devices[i], CL_KERNEL_PRIVATE_MEM_SIZE, sizeof((buf_ulong)), &buf_ulong, NULL) );
+    printf(" CL_KERNEL_PRIVATE_MEM_SIZE: %ld \n", (long int)buf_ulong);
+    // End kernel-device queries
+        
         
 	cl_command_queue queue;
 	queue = CL_CHECK_ERR(clCreateCommandQueue(context, devices[i], 0, &_err));
@@ -256,7 +277,7 @@ int main(int argc, char **argv)
 	CL_CHECK(clWaitForEvents(1, &kernel_completion));
 	CL_CHECK(clReleaseEvent(kernel_completion));
 
-	printf("Kernel Result:");
+	printf("\nKernel Result:");
 	for (int i=0; i<NUM_DATA; i++) {
 		int data;
 		CL_CHECK(clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, i*sizeof(int), sizeof(int), &data, 0, NULL, NULL));
