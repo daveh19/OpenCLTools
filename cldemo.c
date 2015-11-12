@@ -77,21 +77,31 @@ int main(int argc, char **argv)
 	CL_CHECK(clGetPlatformIDs(platforms_n, platforms, &platforms_n));
 
 	printf("=== %d OpenCL platform(s) found: ===\n", platforms_n);
+    const int attributeCount = 5;
+    const char* attributeNames[attributeCount] = { "Name", "Vendor", "Version", "Profile", "Extensions" };
+    const cl_platform_info attributeTypes[attributeCount] = {
+        CL_PLATFORM_NAME,
+        CL_PLATFORM_VENDOR,
+        CL_PLATFORM_VERSION,
+        CL_PLATFORM_PROFILE,
+        CL_PLATFORM_EXTENSIONS };
+    char *info;
+    size_t infoSize = 0;
 	for (int i=0; i<platforms_n; i++)
 	{
-		char buffer[10240];
-		printf("  -- %d --\n", i);
-		CL_CHECK(clGetPlatformInfo(platforms[i], CL_PLATFORM_PROFILE, 10240, buffer, NULL));
-		printf("  PROFILE = %s\n", buffer);
-		CL_CHECK(clGetPlatformInfo(platforms[i], CL_PLATFORM_VERSION, 10240, buffer, NULL));
-		printf("  VERSION = %s\n", buffer);
-		CL_CHECK(clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 10240, buffer, NULL));
-		printf("  NAME = %s\n", buffer);
-		CL_CHECK(clGetPlatformInfo(platforms[i], CL_PLATFORM_VENDOR, 10240, buffer, NULL));
-		printf("  VENDOR = %s\n", buffer);
-		CL_CHECK(clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, 10240, buffer, NULL));
-		printf("  EXTENSIONS = %s\n", buffer);
-	//}
+        printf("  -- %d --\n", i);
+        
+        for (int j = 0; j < attributeCount; j++) {
+            // get platform attribute value size
+            clGetPlatformInfo(platforms[i], attributeTypes[j], 0, NULL, &infoSize);
+            info = (char*) malloc(infoSize);
+            
+            // get platform attribute value
+            clGetPlatformInfo(platforms[i], attributeTypes[j], infoSize, info, NULL);
+            printf("  %d.%d %-11s = %s\n", i+1, j+1, attributeNames[j], info);
+        } 
+        printf("\n\n"); 
+    //}
 
 	if (platforms_n == 0)
 		return 1;
