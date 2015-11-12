@@ -36,6 +36,12 @@
 
 #include "cl_errors.h"
 
+#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_ALL)
+//#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_CPU)
+//#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_GPU)
+//#define CL_DEVICE_TYPE_TO_QUERY (CL_DEVICE_TYPE_DEFAULT)
+
+
 #define NUM_DATA 100
 
 #define CL_CHECK(_expr)                                                         \
@@ -67,6 +73,7 @@ void pfn_notify(const char *errinfo, const void *private_info, size_t cb, void *
 
 int main(int argc, char **argv)
 {
+    // FIND OUT HOW MANY PLATFORMS
     cl_platform_id *platforms = NULL;
 	cl_uint platforms_n = 0;
     // find out how many platforms available
@@ -76,6 +83,7 @@ int main(int argc, char **argv)
     // get the platform IDs
 	CL_CHECK(clGetPlatformIDs(platforms_n, platforms, &platforms_n));
 
+    // QUERY INDIVIDUAL PLATFORM INFO
 	printf("=== %d OpenCL platform(s) found: ===\n", platforms_n);
     const int attributeCount = 5;
     const char* attributeNames[attributeCount] = { "Name", "Vendor", "Version", "Profile", "Extensions" };
@@ -110,16 +118,19 @@ int main(int argc, char **argv)
     //if (i == 0)
     //    continue;
         
-	cl_device_id devices[100];
+    // FIND OUT HOW MANY DEVICES
+	cl_device_id *devices = NULL;
 	cl_uint devices_n = 0;
-    printf("Querying devices\n");
-	//CL_CHECK(clGetDeviceIDs(NULL, CL_DEVICE_TYPE_ALL, 100, devices, &devices_n));
-//  CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_CPU, 100, devices, &devices_n));
-//	CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 100, devices, &devices_n));
-//	CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_DEFAULT, 100, devices, &devices_n));
-    CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 100, devices, &devices_n));
-    printf(" devices queried\n");
+    printf("Querying device numbers,");
+    // find out how many platforms available
+    CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_TO_QUERY, 0, NULL, &devices_n));
+    printf(" device numbers queried\n");
+    printf("There are %d devices on this platform\n", (int)devices_n);
+    // collect device IDs for this platform
+    devices = malloc(devices_n * sizeof(cl_device_id));
+    CL_CHECK(clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_TO_QUERY, devices_n, devices, NULL));
 	
+    // QUERY INDIVIDUAL DEVICES ON EACH PLATFORM
 	printf("=== %d OpenCL device(s) found on %d platform:\n", devices_n, platforms_n);
     //printf("devices_n = %d \n", devices_n);
 	for (int i=0; i<devices_n; i++)
